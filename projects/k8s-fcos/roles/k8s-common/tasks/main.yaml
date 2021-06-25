@@ -1,0 +1,5 @@
+---
+- name: copy modules-load.d/k8s.conf
+  copy:
+    dest: /etc/modules-load.d/k8s.conf
+    src: k8s-modules.conf

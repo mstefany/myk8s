@@ -1,0 +1,10 @@
+[connection]
+id=${interface}
+type=ethernet
+interface-name=${interface}
+[ipv4]
+address1=${ip}/${netmask},${gateway}
+dns=${dns_server}
+dns-search=${dns_domain}
+may-fail=false
+method=manual

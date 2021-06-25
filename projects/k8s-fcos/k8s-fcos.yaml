@@ -1,0 +1,25 @@
+---
+- name: Deploy k8s-fcos
+  hosts: localhost
+
+  tasks:
+    - name: Terragrunt
+      terraform:
+        binary_path: '/usr/local/bin/terragrunt'
+        project_path: './'
+        state: present
+
+- name: Configure nodes to run k8s
+  hosts: k8s
+  remote_user: core
+
+  roles:
+    - k8s-common
+
+#- name: Bootstrap first master
+#  hosts: k8s-master01
+#  
+#  tasks:
+#    - name: TBD
+#
+
