@@ -1,0 +1,17 @@
+[Unit]
+Description=Layer cockpit with rpm-ostree
+Wants=network-online.target
+After=network-online.target
+# We run before `zincati.service` to avoid conflicting rpm-ostree
+# transactions.
+Before=zincati.service
+ConditionPathExists=!/var/lib/%N.stamp
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/rpm-ostree install --apply-live --allow-inactive cockpit-system cockpit-ostree cockpit-storaged cockpit-networkmanager cockpit-selinux cockpit-kdump
+ExecStart=/bin/touch /var/lib/%N.stamp
+
+[Install]
+WantedBy=multi-user.target

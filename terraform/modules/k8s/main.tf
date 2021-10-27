@@ -6,13 +6,12 @@ module "i-k8s-instances" {
   libvirt_pool_name = var.libvirt_pool_name
   libvirt_pool_path = var.libvirt_pool_path
 
-  libvirt_network_name = var.libvirt_network_name
-  libvirt_network_type = var.libvirt_network_type
   libvirt_network_bridge = var.libvirt_network_bridge
 
   instance_boot_base_image = var.instance_boot_base_image
   instance_boot_base_pool = var.instance_boot_base_pool
   instance_boot_size = var.instance_boot_size
+  instance_data_size = var.instance_data_size
 
   hostnames = concat(
     var.control_nodes,
@@ -36,8 +35,12 @@ module "i-k8s-instances" {
   dns_servers = var.dns_servers
   dns_domain = var.dns_domain
 
+  timezone = var.timezone
+
   ssh_initial_user = var.ssh_initial_user
   ssh_authorized_keys = var.ssh_authorized_keys
 
-  additional_ignition_config = "https://raw.githubusercontent.com/mstefany/ignition/main/k8s.ign"
+  updates_day = var.updates_day
+
+  # additional_ignition_config = "https://raw.githubusercontent.com/mstefany/ignition/main/k8s.ign"
 }
