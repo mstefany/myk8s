@@ -1,0 +1,18 @@
+---
+- name: Bring up Libvirt VMs
+  hosts: localhost
+  tasks:
+  - name: Execute Terragrunt
+    ansible.builtin.command:
+      chdir: ../terragrunt/projects/k8s-fcos
+      cmd: /usr/local/bin/terragrunt apply -auto-approve -no-color
+    register: terragrunt_output
+
+  - name: Print Terragrunt output
+    debug:
+      var: terragrunt_output
+
+- name: Execute Kubespray
+  remote_user: core
+  become: true
+  import_playbook: ../kubespray/cluster.yml

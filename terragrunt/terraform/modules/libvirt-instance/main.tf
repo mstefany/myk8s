@@ -2,11 +2,38 @@ locals {
   hostnames = toset(var.hostnames)
 }
 
+resource "libvirt_ignition" "ignition" {
+  for_each = local.hostnames
+  name     = "${each.key}-ignition"
+  pool     = libvirt_pool.pool.name
+  content  = data.ct_config.vm-ignitions[each.key].rendered
+}
+
+data "ct_config" "vm-ignitions" {
+  for_each = local.hostnames
+  content  = data.template_file.vm-configs[each.key].rendered
+}
+
+data "template_file" "vm-configs" {
+  for_each = local.hostnames
+  template = file("${path.module}/ignition.yaml.tmpl")
+
+  vars = {
+    ssh_authorized_keys = jsonencode(var.ssh_authorized_keys)
+    hostname = each.key
+    interface = var.interface
+    ip = var.ips[each.key]
+    netmask = var.netmask
+    gateway = var.gateway
+    dns_server = var.dns_servers[0]
+    dns_domain = var.dns_domain
+  }
+}
 
 data "ignition_user" "initial_user" {
   name = var.ssh_initial_user
   ssh_authorized_keys = var.ssh_authorized_keys
-  groups = ["adm", "docker", "wheel"]
+  # groups = ["adm", "docker", "wheel"]
 }
 
 data "ignition_file" "hostname" {
@@ -23,6 +50,15 @@ data "ignition_file" "netconfig" {
   mode = "384"
   content {
     content = templatefile("${path.module}/nmconnection.tpl", { interface = var.interface, ip = var.ips[each.key], netmask = var.netmask, gateway = var.gateway, dns_server = var.dns_servers[0], dns_domain = var.dns_domain})
+  }
+}
+
+data "ignition_file" "network" {
+  for_each = local.hostnames
+  path = "/etc/systemd/network/${var.interface}.network"
+  mode = "384"
+  content {
+    content = templatefile("${path.module}/network.tpl", { interface = var.interface, ip = var.ips[each.key], netmask = var.netmask, gateway = var.gateway, dns_server = var.dns_servers[0], dns_domain = var.dns_domain})
   }
 }
 
@@ -55,19 +91,20 @@ data "ignition_config" "ignition" {
   for_each = local.hostnames
   files = [
     data.ignition_file.hostname[each.key].rendered,
-    data.ignition_file.netconfig[each.key].rendered,
-    data.ignition_file.rp_filter.rendered,
-    data.ignition_file.updates_strategy[each.key].rendered
+#   data.ignition_file.netconfig[each.key].rendered,
+    data.ignition_file.network[each.key].rendered,
+#   data.ignition_file.rp_filter.rendered,
+#   data.ignition_file.updates_strategy[each.key].rendered
   ]
-  links = [
-    data.ignition_link.timezone.rendered
-  ]
+# links = [
+#   data.ignition_link.timezone.rendered
+# ]
   users = [
     data.ignition_user.initial_user.rendered
   ]
-  systemd = [
-    data.ignition_systemd_unit.install_cockpit.rendered
-  ]
+# systemd = [
+#   data.ignition_systemd_unit.install_cockpit.rendered
+# ]
 }
 
 
@@ -96,12 +133,12 @@ resource "libvirt_volume" "data_volumes" {
   size   = var.instance_data_size
 }
 
-resource "libvirt_ignition" "ignition" {
-  for_each = local.hostnames
-  name = "${each.key}-ignition"
-  pool = libvirt_pool.pool.name
-  content = data.ignition_config.ignition[each.key].rendered
-}
+#resource "libvirt_ignition" "ignition" {
+#  for_each = local.hostnames
+#  name = "${each.key}-ignition"
+#  pool = libvirt_pool.pool.name
+#  content = data.ignition_config.ignition[each.key].rendered
+#}
 
 resource "libvirt_domain" "domains" {
   for_each = local.hostnames
@@ -133,4 +170,5 @@ resource "libvirt_domain" "domains" {
   }
 
   coreos_ignition = libvirt_ignition.ignition[each.key].id
+  fw_cfg_name = "opt/org.flatcar-linux/config"
 }

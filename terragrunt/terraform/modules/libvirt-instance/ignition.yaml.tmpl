@@ -1,0 +1,25 @@
+---
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys: ${ssh_authorized_keys}
+
+storage:
+  files:
+  - path: /etc/hostname
+    filesystem: "root"
+    contents:
+      inline: ${hostname}
+
+networkd:
+  units:
+  - name: 10-${interface}.network
+    contents: |
+      [Match]
+      Name=${interface}
+
+      [Network]
+      Address=${ip}/${netmask}
+      Gateway=${gateway}
+      DNS=${dns_server}
+      Domains=${dns_domain}

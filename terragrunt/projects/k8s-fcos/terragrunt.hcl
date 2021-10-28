@@ -15,7 +15,8 @@ inputs = {
 
   # instance config
   instance_boot_base_pool = "default"
-  instance_boot_base_image = "fedora-coreos-34.20211004.3.1-qemu.x86_64.qcow2"
+  # instance_boot_base_image = "fedora-coreos-34.20211004.3.1-qemu.x86_64.qcow2"
+  instance_boot_base_image = "flatcar_production_qemu_image.img"
 
   control_nodes = [
     "k8s-master01",
